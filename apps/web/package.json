@@ -1,0 +1,42 @@
+{
+  "name": "@foqus/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@foqus/core": "workspace:*",
+    "@foqus/db": "workspace:*",
+    "@foqus/shared": "workspace:*",
+    "@neondatabase/serverless": "^1.0.2",
+    "@tanstack/query-core": "^5.90.5",
+    "@tanstack/react-query": "^5.90.5",
+    "@tanstack/react-query-persist-client": "^5.90.5",
+    "@vercel/functions": "^3.1.4",
+    "adhan": "^4.4.3",
+    "dexie": "^4.2.1",
+    "dexie-react-hooks": "^4.2.0",
+    "drizzle-orm": "^0.44.7",
+    "hono": "^4.10.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.1",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.16",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^5.1.0",
+    "tailwindcss": "^4.1.16",
+    "typescript": "^5.7.3",
+    "vite": "^7.1.14",
+    "vite-plugin-pwa": "^1.0.5",
+    "@types/node": "^22.10.5"
+  }
+}

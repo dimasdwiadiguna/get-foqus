@@ -1,0 +1,32 @@
+{
+  "name": "@foqus/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./seed": "./src/seed.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "generate": "drizzle-kit generate",
+    "migrate": "tsx src/migrate.ts",
+    "seed": "tsx src/seed-cli.ts",
+    "studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@foqus/core": "workspace:*",
+    "@neondatabase/serverless": "^1.0.2",
+    "drizzle-orm": "^0.44.7"
+  },
+  "devDependencies": {
+    "dotenv": "^17.2.5",
+    "drizzle-kit": "^0.31.6",
+    "tsx": "^4.20.7",
+    "@types/node": "^22.10.5"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "foqus",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm --filter @foqus/core build && pnpm --filter @foqus/shared build && pnpm --filter @foqus/db build && pnpm --filter @foqus/web build",
+    "dev": "pnpm --filter @foqus/web dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "lint": "prettier --check \"**/*.{ts,tsx,json,md,css}\"",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md,css}\"",
+    "db:generate": "pnpm --filter @foqus/db generate",
+    "db:migrate": "pnpm --filter @foqus/db migrate",
+    "db:seed": "pnpm --filter @foqus/db seed"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@tailwindcss/oxide",
+      "sharp"
+    ]
+  }
+}
