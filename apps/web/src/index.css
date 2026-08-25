@@ -1,0 +1,99 @@
+@import 'tailwindcss';
+
+/**
+ * Design tokens (BRIEF §11) — the Bandung landscape palette: volcanic stone, tea gardens,
+ * morning mist. Not a generic productivity look, deliberately.
+ */
+@theme {
+  --color-ink: #16232b;
+  --color-paper: #eff1ec;
+  --color-tea: #1f6f5c;
+  --color-ember: #e8a33d;
+  --color-dusk: #6b4b7a;
+  --color-mist: #8fa09b;
+
+  /* Tints used for surfaces; derived from the six above, never new hues. */
+  --color-ink-soft: #21323c;
+  --color-paper-soft: #f7f8f4;
+  --color-tea-soft: #e3ede9;
+  --color-ember-soft: #fbf0dd;
+  --color-dusk-soft: #ece6f0;
+
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Martian Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Minimum touch target (§10.10) — never render a control smaller than this. */
+  --spacing-touch: 44px;
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+    --surface: var(--color-paper);
+    --surface-raised: var(--color-paper-soft);
+    --text: var(--color-ink);
+    --text-muted: #5c6b70;
+    --line: #d8ddd6;
+  }
+
+  /* Dark mode is a baseline, not a feature to announce (§11). */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: var(--color-ink);
+      --surface-raised: var(--color-ink-soft);
+      --text: var(--color-paper);
+      --text-muted: var(--color-mist);
+      --line: #2c3d47;
+    }
+  }
+
+  html,
+  body {
+    height: 100%;
+    background-color: var(--surface);
+    color: var(--text);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    /* iOS safe areas (§11). */
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Visible keyboard focus everywhere — a baseline, not an option (§11). */
+  :focus-visible {
+    outline: 2px solid var(--color-tea);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .surface {
+    background-color: var(--surface);
+  }
+  .surface-raised {
+    background-color: var(--surface-raised);
+  }
+  .text-body {
+    color: var(--text);
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+  .hairline {
+    border-color: var(--line);
+  }
+}

@@ -1,0 +1,3 @@
+# FOQUS is a single-user, fully authenticated app. Nothing here is meant for crawlers.
+User-agent: *
+Disallow: /
