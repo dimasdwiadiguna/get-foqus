@@ -43,7 +43,12 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       if (body.error?.message) message = body.error.message;
       if (body.error?.code) code = body.error.code;
     } catch {
-      // A non-JSON body (a proxy error page, say) — keep the generic Indonesian message.
+      // A non-JSON body (an HTML error page from the platform, say) — keep the generic message.
+    }
+    if (code === 'FUNCTION_INVOCATION_FAILED') {
+      // Vercel's own error, not ours: the function crashed before any FOQUS code ran. Almost
+      // always a module that could not be loaded, or a missing build step (DECISIONS T18).
+      message = 'Fungsi server gagal dijalankan. Periksa log Vercel.';
     }
     throw new ApiError(message, response.status, code);
   }

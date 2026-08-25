@@ -9,7 +9,7 @@
 import { Navigate, Route, Routes, useSearchParams } from 'react-router-dom';
 import { AppHeader } from './components/AppHeader.js';
 import { BottomTabs } from './components/BottomTabs.js';
-import { UnauthenticatedError } from './lib/api.js';
+import { ApiError, UnauthenticatedError } from './lib/api.js';
 import { useBootstrap } from './lib/queries.js';
 import { CalendarScreen } from './screens/CalendarScreen.js';
 import { LoginScreen } from './screens/LoginScreen.js';
@@ -43,6 +43,14 @@ export function App() {
       <main className="surface flex min-h-full flex-col items-center justify-center gap-4 px-8 text-center">
         <p className="font-display text-lg font-semibold">Tidak bisa memuat data</p>
         <p className="text-sm text-muted">{bootstrap.error.message}</p>
+        {bootstrap.error instanceof ApiError && (
+          // The status and code are what tell a platform failure apart from an application one:
+          // `FUNCTION_INVOCATION_FAILED` means the serverless function never booted, while a
+          // FOQUS-authored message means it booted and something inside it went wrong.
+          <p className="font-mono text-[11px] text-muted">
+            HTTP {bootstrap.error.status} · {bootstrap.error.code}
+          </p>
+        )}
         <button
           type="button"
           onClick={() => bootstrap.refetch()}

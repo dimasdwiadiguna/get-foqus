@@ -7,22 +7,25 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "pnpm --filter @foqus/core build && pnpm --filter @foqus/shared build && pnpm --filter @foqus/db build && pnpm --filter @foqus/web build",
+    "build": "pnpm build:packages && pnpm --filter @foqus/web run build",
     "dev": "pnpm --filter @foqus/web dev",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "pnpm -r --parallel typecheck",
+    "typecheck": "pnpm build:packages && pnpm --filter @foqus/web run typecheck",
     "lint": "prettier --check \"**/*.{ts,tsx,json,md,css}\"",
     "format": "prettier --write \"**/*.{ts,tsx,json,md,css}\"",
     "db:generate": "pnpm --filter @foqus/db generate",
     "db:migrate": "pnpm --filter @foqus/db migrate",
-    "db:seed": "pnpm --filter @foqus/db seed"
+    "db:seed": "pnpm --filter @foqus/db seed",
+    "build:packages": "pnpm --filter @foqus/core --filter @foqus/shared --filter @foqus/db run build",
+    "verify:api": "pnpm build:packages && node scripts/verify-api.mjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1",
     "prettier": "^3.4.2",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.5"
+    "vitest": "^3.0.5",
+    "esbuild": "^0.25.12"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
