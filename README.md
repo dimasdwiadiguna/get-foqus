@@ -156,8 +156,32 @@ Satu Vercel project:
 | Build Command    | `vite build`                               |
 | Output Directory | `dist`                                     |
 
+Nilai-nilai itu sudah tertulis di `apps/web/vercel.json`, jadi normalnya tidak perlu diisi
+manual. Dua hal yang **harus** dicek di Project Settings:
+
+- **Root Directory → “Include files outside of the Root Directory in the Build Step”** wajib
+  aktif. Fungsi API memuat `packages/*/dist`, yang berada di luar `apps/web`.
+- **Deployment Protection → Vercel Authentication.** Kalau aktif, seluruh request ke deployment
+  (termasuk `/api/*`) dialihkan ke `vercel.com/sso-api` dan diblokir CORS. Matikan, atau uji
+  hanya lewat domain produksi tempat kamu sudah login.
+
 Daftarkan seluruh variabel di `.env.example` pada Project Settings → Environment Variables.
 Folder `apps/web/api/` otomatis menjadi serverless functions; tidak ada server terpisah.
+
+### Paket workspace harus dibangun sebelum fungsi API
+
+`packages/core`, `packages/shared`, dan `packages/db` mengekspor `dist/` hasil kompilasi, bukan
+TypeScript mentah. Runtime fungsi Vercel adalah **Node polos** dan tidak bisa memuat `.ts` —
+kalau `dist/` belum ada, fungsi crash saat import dan Vercel menjawab
+`FUNCTION_INVOCATION_FAILED` (“A server error has occurred”) sebelum satu baris kode FOQUS
+berjalan. Karena itu Build Command menjalankan `build:packages` lebih dulu.
+
+Vite dan Vitest tetap membaca paket-paket itu dari sumber lewat alias, jadi mengedit domain
+layer tetap hot-reload tanpa build.
+
+**Sebelum setiap deploy, jalankan `pnpm verify:api`.** Perintah itu mem-boot fungsi persis
+seperti Vercel dan memanggil rute-rutenya. `pnpm test`, `pnpm typecheck`, dan `pnpm build`
+tidak akan pernah menangkap kelas kegagalan ini — ketiganya men-transpile TypeScript sendiri.
 
 **Tidak ada Vercel Cron di v1.** `vercel.json` sengaja tidak punya blok `crons`. Paket Hobby
 membatasi cron maksimal sekali sehari — ekspresi yang lebih sering **menggagalkan deploy**
@@ -202,6 +226,18 @@ nyata:
 Di v1, saat offline FOQUS bisa: melihat data, menandai task selesai, mencatat realisasi agenda,
 dan menjalankan pomodoro. Membuat/mengedit/menjadwalkan butuh koneksi — kontrolnya dinonaktifkan
 dengan penjelasan di tempat, bukan toast error setelah ditekan.
+
+### Membaca kegagalan API di produksi
+
+Bahasa pesan errornya yang membedakan:
+
+| Yang tampil                                                                          | Artinya                                                                                | Langkah                                                                      |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| “Fungsi server gagal dijalankan. Periksa log Vercel.” (`FUNCTION_INVOCATION_FAILED`) | Fungsi crash saat import; kode FOQUS tidak pernah jalan                                | `pnpm verify:api`, lalu cek Build Command sudah menjalankan `build:packages` |
+| “Terjadi kesalahan di server. Coba lagi.”                                            | Fungsi jalan, ada yang gagal di dalamnya — biasanya env kurang atau DB belum dimigrasi | Cek log function di Vercel; pesan aslinya dicatat di sana                    |
+| “Sesi berakhir. Silakan masuk lagi.”                                                 | Normal — belum login                                                                   | Masuk lewat Google                                                           |
+
+Layar error menampilkan `HTTP <status> · <code>` di bawah pesannya untuk mempercepat ini.
 
 ### Sinkronisasi Google Calendar
 

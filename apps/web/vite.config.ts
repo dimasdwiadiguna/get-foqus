@@ -13,6 +13,12 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // Client bundle reads the domain packages from source; the API function consumes their
+      // built `dist/` output instead (DECISIONS T18).
+      '@foqus/core': fileURLToPath(new URL('../../packages/core/src/index.ts', import.meta.url)),
+      '@foqus/shared': fileURLToPath(
+        new URL('../../packages/shared/src/index.ts', import.meta.url),
+      ),
     },
   },
   server: {

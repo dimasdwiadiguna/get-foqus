@@ -3,20 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./schema": "./src/schema.ts",
-    "./seed": "./src/seed.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "default": "./dist/schema.js"
+    },
+    "./seed": {
+      "types": "./dist/seed.d.ts",
+      "default": "./dist/seed.js"
+    }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "generate": "drizzle-kit generate",
     "migrate": "tsx src/migrate.ts",
     "seed": "tsx src/seed-cli.ts",
-    "studio": "drizzle-kit studio"
+    "studio": "drizzle-kit studio",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@foqus/core": "workspace:*",
@@ -28,5 +38,9 @@
     "drizzle-kit": "^0.31.6",
     "tsx": "^4.20.7",
     "@types/node": "^22.10.5"
-  }
+  },
+  "files": [
+    "dist",
+    "migrations"
+  ]
 }

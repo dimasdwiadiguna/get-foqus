@@ -164,6 +164,9 @@ self-host dan catat tiga dependency-nya.
    memakai `endTime` pada hari yang sama, sehingga interval terbalik dan dibuang. Sekarang
    potongan kedua memakai hari berikutnya. Ada testnya (`22:00–02:00`).
 
+> Pelajaran yang sama, satu tingkat lebih dalam, ada di **T18/T19**: render nyata menangkap bug
+> UI, tapi tidak menangkap bug _runtime server_. Untuk itu butuh mem-boot fungsinya.
+
 ### T12. Algoritma AES-GCM dan JWT dipatok eksplisit
 
 Refresh token Google dienkripsi AES-GCM dengan IV 96-bit baru setiap panggilan; ciphertext
@@ -224,6 +227,54 @@ Varian maskable memakai inset lebih besar agar mark tetap di dalam safe zone. Ik
 diregenerasi kalau palet berubah.
 
 ---
+
+### T18. Paket workspace dikompilasi ke JavaScript; runtime Vercel tidak bisa memuat `.ts`
+
+**Ini memperbaiki deploy pertama yang gagal.** Versi awal M0 membuat `@foqus/core`,
+`@foqus/shared`, dan `@foqus/db` mengarahkan `main`/`exports` langsung ke `src/index.ts`.
+Vite dan Vitest men-transpile TypeScript sendiri, jadi keduanya senang-senang saja — `pnpm test`,
+`pnpm typecheck`, dan `pnpm build` semuanya hijau. Tapi fungsi serverless Vercel berjalan di
+**Node polos**, yang tidak bisa memuat `.ts`. Fungsi crash saat import, sebelum satu baris pun
+kode FOQUS berjalan.
+
+Gejalanya menipu: `/api/bootstrap` mengembalikan 500 dengan pesan **berbahasa Inggris**
+“A server error has occurred”. Itu bukan pesan FOQUS — `app.onError` selalu menjawab dalam
+Bahasa Indonesia. Itu badan JSON `FUNCTION_INVOCATION_FAILED` milik Vercel sendiri, yang
+kebetulan berbentuk sama dengan envelope error kami sehingga terbaca utuh di UI. Perbedaan
+bahasa itulah yang membedakan “fungsi gagal boot” dari “fungsi jalan tapi ada yang salah”.
+
+Perbaikannya:
+
+- tiap paket punya `tsconfig.build.json` yang meng-emit `dist/` beserta deklarasi, dan
+  `exports` menunjuk ke sana;
+- Vite dan Vitest tetap membaca `packages/*` dari **sumber** lewat alias, supaya mengedit
+  domain layer tetap hot-reload tanpa build;
+- `apps/web/vercel.json` menjalankan `build:packages` sebelum `vite build`, jadi `dist/`
+  sudah ada saat Vercel membangun fungsinya;
+- `pnpm typecheck` sekarang memeriksa `apps/web` terhadap `dist/*.d.ts` — artefak yang sama
+  yang akan dimuat fungsi Vercel, bukan sumbernya.
+
+`packages/core` tetap tanpa `@types/node` dan tanpa lib DOM. Satu-satunya global platform yang
+disentuhnya — WebCrypto, untuk sumber acak default `uuidv7()` — dideklarasikan di
+`src/env.d.ts`, bukan dengan melebarkan `lib`, yang akan diam-diam membuat `document` ikut
+tersedia.
+
+### T19. `pnpm verify:api` — mem-boot fungsi Vercel di bawah Node polos
+
+T18 lolos dari seluruh gerbang kualitas yang ada. Test, typecheck, dan build semuanya hijau
+sementara produksi mati total, karena tidak satu pun dari ketiganya pernah menjalankan kode API
+dengan resolusi modul Node yang sebenarnya.
+
+`scripts/verify-api.mjs` menutup celah itu: ia men-transform `api/**` ke JavaScript persis
+seperti platform, meng-import entrypoint-nya dengan resolusi Node biasa, lalu memanggil
+rute-rutenya — `/api/health` 200, `/api/bootstrap` tanpa sesi 401, `/api/auth/google/start`
+302 ke Google, `/api/cron/drain-outbox` 401 tanpa `CRON_SECRET` dan 200 dengan, rute tak dikenal 404. Output-nya sengaja ditulis ke dalam `apps/web/` karena resolusi ESM menelusuri ke atas dari
+URL berkas peng-import, bukan dari working directory — dan justru penelusuran itulah yang diuji.
+
+Diverifikasi menangkap regresinya: mengembalikan `exports` `@foqus/core` ke `src/index.ts`
+membuat script ini gagal dengan exit code 1.
+
+**Jalankan sebelum setiap deploy.** Ini satu-satunya gerbang yang melihat apa yang dilihat Vercel.
 
 ## U — Antarmuka
 
