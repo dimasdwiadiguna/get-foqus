@@ -6,7 +6,14 @@
  * that produce it rather than being reassembled in the UI.
  */
 
-import type { ClockTime, DayOfWeek, ISODate, ISODateTime, TimeZone } from '../types.js';
+import type {
+  CelebrationLevel,
+  ClockTime,
+  DayOfWeek,
+  ISODate,
+  ISODateTime,
+  TimeZone,
+} from '../types.js';
 import { localClockTime, localDateKey, parseDateKey, zonedParts } from '../time/timezone.js';
 
 export const DAY_NAMES: Record<DayOfWeek, string> = {
@@ -132,4 +139,46 @@ export function joinList(items: string[]): string {
   if (items.length === 0) return '';
   if (items.length === 1) return items[0] ?? '';
   return `${items.slice(0, -1).join(', ')} dan ${items[items.length - 1]}`;
+}
+
+/**
+ * Enum values are English identifiers; the interface is Bahasa Indonesia (§1). These maps are
+ * the boundary between the two, and they live here for the same reason violation messages do
+ * (DECISIONS T5): the phrasing belongs next to the domain, never reassembled in React.
+ */
+export const CELEBRATION_LABELS: Record<CelebrationLevel, string> = {
+  full: 'Penuh',
+  subtle: 'Halus',
+  off: 'Mati',
+};
+
+/** Prayer calculation methods, named the way the user recognises them. */
+export const PRAYER_METHOD_LABELS: Record<string, string> = {
+  Kemenag: 'Kemenag RI',
+  MuslimWorldLeague: 'Muslim World League',
+  Egyptian: 'Egyptian General Authority',
+  Karachi: 'University of Islamic Sciences, Karachi',
+  UmmAlQura: 'Umm al-Qura, Makkah',
+  Singapore: 'Singapura',
+  Turkey: 'Diyanet, Turki',
+  Other: 'Kustom',
+};
+
+/** Falls back to the raw key rather than to an empty string — an unknown method is still a name. */
+export function describePrayerMethod(method: string): string {
+  return PRAYER_METHOD_LABELS[method] ?? method;
+}
+
+export function describeCelebration(level: CelebrationLevel): string {
+  return CELEBRATION_LABELS[level];
+}
+
+/** `Terlambat 1 hari` / `Jatuh tempo hari ini` — used by "Sisa hari ini" (§10.3). */
+export function describeDueDate(dueDate: ISODate, today: ISODate): string {
+  const diff = daysBetween(today, dueDate);
+  if (diff === 0) return 'Jatuh tempo hari ini';
+  if (diff === -1) return 'Terlambat sejak kemarin';
+  if (diff < 0) return `Terlambat ${Math.abs(diff)} hari`;
+  if (diff === 1) return 'Jatuh tempo besok';
+  return `Jatuh tempo ${formatDateShort(dueDate)}`;
 }

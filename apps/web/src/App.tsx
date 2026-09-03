@@ -7,7 +7,6 @@
  */
 
 import { Navigate, Route, Routes, useSearchParams } from 'react-router-dom';
-import { AppHeader } from './components/AppHeader.js';
 import { BottomTabs } from './components/BottomTabs.js';
 import { ApiError, UnauthenticatedError } from './lib/api.js';
 import { useBootstrap } from './lib/queries.js';
@@ -44,12 +43,17 @@ export function App() {
         <p className="font-display text-lg font-semibold">Tidak bisa memuat data</p>
         <p className="text-sm text-muted">{bootstrap.error.message}</p>
         {bootstrap.error instanceof ApiError && (
-          // The status and code are what tell a platform failure apart from an application one:
+          // The status and code tell a platform failure apart from an application one:
           // `FUNCTION_INVOCATION_FAILED` means the serverless function never booted, while a
-          // FOQUS-authored message means it booted and something inside it went wrong.
-          <p className="font-mono text-[11px] text-muted">
-            HTTP {bootstrap.error.status} · {bootstrap.error.code}
-          </p>
+          // FOQUS-authored message means it booted and something inside it went wrong
+          // (DECISIONS T18). Diagnostic, so it stays — folded away, so it is not the first
+          // thing the screen says.
+          <details className="text-label text-muted">
+            <summary className="cursor-pointer">Detail teknis</summary>
+            <p className="mt-2 font-mono">
+              HTTP {bootstrap.error.status} · {bootstrap.error.code}
+            </p>
+          </details>
         )}
         <button
           type="button"
@@ -64,7 +68,6 @@ export function App() {
 
   return (
     <div className="surface flex min-h-full flex-col">
-      <AppHeader pendingCount={bootstrap.data?.pendingSyncCount ?? 0} />
       <main className="mx-auto w-full max-w-2xl flex-1">
         <Routes>
           <Route path="/" element={<TodayScreen />} />
@@ -80,11 +83,28 @@ export function App() {
   );
 }
 
+/**
+ * A skeleton shaped like the day ribbon, not a lone pulsing dot.
+ *
+ * The dot it replaces was two pixels across on an empty screen, which reads as a broken page
+ * rather than a loading one. This paints the shape the user is about to get.
+ */
 function SplashScreen() {
   return (
-    <main className="surface flex min-h-full items-center justify-center">
+    <main className="surface min-h-full animate-pulse px-4 pt-8" aria-busy="true">
       <span className="sr-only">Memuat FOQUS…</span>
-      <span className="h-2 w-2 animate-pulse rounded-full bg-tea" aria-hidden="true" />
+      <div className="mx-auto w-full max-w-2xl" aria-hidden="true">
+        <div className="h-7 w-40 rounded-lg bg-mist/25" />
+        <div className="mt-2 h-4 w-56 rounded bg-mist/20" />
+        <div className="mt-6 flex gap-3">
+          <div className="w-12 shrink-0 space-y-8 pt-1">
+            {Array.from({ length: 5 }, (_, index) => (
+              <div key={index} className="ml-auto h-3 w-8 rounded bg-mist/20" />
+            ))}
+          </div>
+          <div className="h-72 flex-1 rounded-xl border hairline surface-raised" />
+        </div>
+      </div>
     </main>
   );
 }

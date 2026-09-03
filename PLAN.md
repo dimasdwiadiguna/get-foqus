@@ -89,13 +89,21 @@ ketukan penuh; mode seleksi; layar Hari Ini versi awal (tanpa pita hari).
 
 ## M2 — Agenda & kalender
 
-Availability window + buffer + blok sholat (derived); tampilan Hari (pita hari §11) & Pekan;
-**Jalur A slot usulan** dan **Jalur B mode bawa** (§10.2); pindah/ubah durasi blok agenda
-(dnd-kit, intra-layar); hapus agenda tanpa menyentuh task; dialog override yang menyebut
-pelanggaran spesifik (§5.5).
+Availability window + buffer + blok sholat (derived); Kalender **membuka ke mode Pekan**, mode Hari
+sebagai tujuan `?tanggal=` (§10.5); sheet **"Kapan?"** (slot usulan + geser tenggat, §10.2) dan
+**mode bawa** dengan `returnTo`; pindah/ubah durasi blok agenda (dnd-kit, intra-layar) yang
+**menulis balik `allocatedPomodoros`**; hapus agenda tanpa menyentuh task; dialog override yang
+menyebut pelanggaran spesifik (§5.5).
+
+**`suggestSlots()` masuk di sini, bukan di M6.** Jalur A adalah jalur default §10.2 dan tidak bisa
+dibangun tanpa skoring, sementara `allocate()` penuh dijadwalkan M6 dan hari ini masih kontrak tipe
+(DECISIONS T16). M2 menulis varian **satu task** di atas fondasi yang sudah teruji —
+`freeIntervals()`, `candidateSlots()`, `detectViolations()`, `reservedDurationMin()` — dan M6
+menggeneralisasikannya. Bobot skoring ditanyakan ke pemilik produk saat M2 dimulai.
 
 **DoD:** invariant §5.1–§5.6 punya test dan lulus; seluruh alur penjadwalan lulus uji Playwright
-**dengan klik saja, tanpa satu pun gerakan drag**.
+**dengan klik saja, tanpa satu pun gerakan drag**; mode bawa selalu memulangkan pengguna ke layar
+asalnya.
 
 ---
 
@@ -134,8 +142,9 @@ bukan toast error setelah ditekan.
 
 ## M6 — Time block & smart allocation
 
-Time block one-time & recurring (RRULE) dengan filter; perencanaan pekanan; implementasi penuh
-`allocate()` (greedy + skoring, §6) beserta `reason` berbahasa Indonesia per item; review draft
+Time block one-time & recurring (RRULE) dengan filter; perencanaan pekanan; generalisasi
+`suggestSlots()` (M2) menjadi `allocate()` penuh — multi-task, urutan topologis, split (greedy +
+skoring, §6) beserta `reason` berbahasa Indonesia per item; review draft
 (terima/tolak/geser); Commit sekali jalan.
 
 **DoD:** mesin tidak pernah melanggar §5.4 di seluruh test; tiap item draft punya alasan.
@@ -144,7 +153,9 @@ Time block one-time & recurring (RRULE) dengan filter; perencanaan pekanan; impl
 
 ## M7 — Peninjauan & perayaan
 
-Prompt realisasi otomatis saat app dibuka (D7); tunda/jadwal ulang cepat; centang yang menggambar
+Prompt realisasi otomatis saat app dibuka (D7) sebagai **antrean yang tidak pecah** (§10.7) —
+"Pilih di kalender" menunda item ke akhir antrean, bukan melempar pengguna keluar; tunda/jadwal
+ulang cepat; centang yang menggambar
 dirinya; cincin progres pekanan; confetti untuk tiga momen saja; mode gelap; polesan aksesibilitas
 (fokus keyboard, kontras AA, area aman iOS).
 

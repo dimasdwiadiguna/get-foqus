@@ -28,7 +28,7 @@ export function BottomTabs() {
               end={tab.end}
               className={({ isActive }) =>
                 [
-                  'flex min-h-touch flex-col items-center justify-center gap-1 px-2 py-2 text-[11px] font-medium transition-colors',
+                  'flex min-h-touch flex-col items-center justify-center gap-1 px-2 py-2 text-label font-medium transition-colors',
                   isActive ? 'text-tea' : 'text-muted',
                 ].join(' ')
               }

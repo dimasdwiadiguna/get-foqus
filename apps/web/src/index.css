@@ -25,6 +25,16 @@
 
   /* Minimum touch target (§10.10) — never render a control smaller than this. */
   --spacing-touch: 44px;
+
+  /*
+   * Type scale floor. Metadata used to be set in arbitrary 10px and 11px values scattered
+   * across nine files; Martian Mono in particular is unreadable below 12px. Two named steps
+   * replace the loose numbers, and 12px is the floor for anything the user actually reads.
+   */
+  --text-label: 0.75rem; /* 12px — the smallest text FOQUS ever renders */
+  --text-label--line-height: 1.25rem;
+  --text-meta: 0.8125rem; /* 13px — secondary rows, category and due-date lines */
+  --text-meta--line-height: 1.25rem;
 }
 
 @layer base {

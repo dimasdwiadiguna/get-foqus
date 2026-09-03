@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  describeCelebration,
+  describeDueDate,
+  describePrayerMethod,
   formatDateLong,
   formatDateShort,
   formatDuration,
@@ -38,5 +41,25 @@ describe('Indonesian formatting', () => {
   it('joins lists with "dan"', () => {
     expect(joinList(['Subuh'])).toBe('Subuh');
     expect(joinList(['Subuh', 'Zuhur', 'Ashar'])).toBe('Subuh, Zuhur dan Ashar');
+  });
+
+  it('never leaks an English enum value into the interface', () => {
+    expect(describeCelebration('full')).toBe('Penuh');
+    expect(describeCelebration('subtle')).toBe('Halus');
+    expect(describeCelebration('off')).toBe('Mati');
+    expect(describePrayerMethod('Kemenag')).toBe('Kemenag RI');
+    expect(describePrayerMethod('UmmAlQura')).toBe('Umm al-Qura, Makkah');
+  });
+
+  it('falls back to the raw key for an unknown prayer method', () => {
+    expect(describePrayerMethod('Tehran')).toBe('Tehran');
+  });
+
+  it('names an overdue task without scolding it', () => {
+    expect(describeDueDate('2026-08-25', '2026-08-25')).toBe('Jatuh tempo hari ini');
+    expect(describeDueDate('2026-08-24', '2026-08-25')).toBe('Terlambat sejak kemarin');
+    expect(describeDueDate('2026-08-21', '2026-08-25')).toBe('Terlambat 4 hari');
+    expect(describeDueDate('2026-08-26', '2026-08-25')).toBe('Jatuh tempo besok');
+    expect(describeDueDate('2026-08-30', '2026-08-25')).toBe('Jatuh tempo 30 Agu');
   });
 });

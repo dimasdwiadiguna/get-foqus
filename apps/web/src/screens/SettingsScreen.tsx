@@ -11,11 +11,15 @@ import {
   DAY_NAMES,
   PRAYER_LABELS,
   PRAYER_ORDER,
+  describeCelebration,
+  describePrayerMethod,
+  formatDateLong,
   formatTime,
   localDateKey,
   type DayOfWeek,
 } from '@foqus/core';
 import { ScreenTitle } from '../components/ScreenTitle.js';
+import { ConnectionStatus } from '../components/ConnectionStatus.js';
 import { api } from '../lib/api.js';
 import { clearMirror } from '../data/db.js';
 import { useDayContext } from '../lib/useDayContext.js';
@@ -53,9 +57,11 @@ export function SettingsScreen({ user }: { user: SessionUser | undefined }) {
 
   return (
     <div className="pb-10">
-      <ScreenTitle sub={user?.email}>Setelan</ScreenTitle>
+      <ScreenTitle actions={<ConnectionStatus />}>Setelan</ScreenTitle>
 
       <Section title="Koneksi Google">
+        {/* The account belongs in the account section, not as the screen's subtitle. */}
+        <Row label="Akun">{user?.email ?? '—'}</Row>
         <Row label="Status">{user?.googleConnected ? 'Terhubung' : 'Belum terhubung'}</Row>
         <Row label="Kalender agenda">
           {user?.agendaCalendarId ? 'FOQUS — Agenda' : 'Dibuat saat sinkronisasi pertama'}
@@ -76,7 +82,8 @@ export function SettingsScreen({ user }: { user: SessionUser | undefined }) {
         )}
       </Section>
 
-      <Section title={`Waktu sholat · ${localDateKey(now, timezone)}`}>
+      {/* A date key is a storage format, not something to show a reader. */}
+      <Section title={`Waktu sholat · ${formatDateLong(localDateKey(now, timezone))}`}>
         {PRAYER_ORDER.map((prayer) => {
           const block = day.prayerBlocks.find((candidate) => candidate.label === prayer);
           const perPrayer = prayerSettings.perPrayer[prayer];
@@ -93,7 +100,8 @@ export function SettingsScreen({ user }: { user: SessionUser | undefined }) {
           );
         })}
         <Row label="Metode">
-          {prayerSettings.method} · ihtiyati +{prayerSettings.ihtiyatiMin} menit
+          {describePrayerMethod(prayerSettings.method)} · ihtiyati +{prayerSettings.ihtiyatiMin}{' '}
+          menit
         </Row>
       </Section>
 
@@ -108,7 +116,8 @@ export function SettingsScreen({ user }: { user: SessionUser | undefined }) {
       <Section title="Umum">
         <Row label="Zona waktu">{settings.timezone}</Row>
         <Row label="Buffer default">{settings.defaultBufferAfterMin} menit</Row>
-        <Row label="Perayaan">{settings.celebration}</Row>
+        {/* `full`/`subtle`/`off` are code identifiers; the interface is Indonesian (§1). */}
+        <Row label="Perayaan">{describeCelebration(settings.celebration)}</Row>
       </Section>
 
       <div className="px-4 pt-6">

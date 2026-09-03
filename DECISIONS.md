@@ -317,6 +317,142 @@ Tidak disebut di brief. Tanpa ini, akun berikutnya yang login di perangkat sama 
 data akun sebelumnya sesaat sebelum bootstrap selesai. FOQUS memang aplikasi satu pengguna,
 tapi biayanya satu baris.
 
+### U7. "Jadwalkan" dan "Tunda" dilebur jadi satu sheet "Kapan?"
+
+§10.2 memberi "Jadwalkan" chip _Nanti hari ini · Besok pagi · Slot bebas berikutnya_ (membuat
+**agenda**, punya jam), §10.4 memberi "Tunda" chip _Nanti hari ini · Besok · Akhir pekan · Pekan
+depan_ (menggeser **due date**, hanya tanggal), dan §10.7 menambah pemilih ketiga. Chip-nya nyaris
+identik dan hasilnya berbeda total: pengguna menekan "Besok" tanpa tahu apakah ia baru memesan
+waktu atau memindahkan tenggat.
+
+Keputusan: satu sheet **"Kapan?"** dengan dua bagian yang sengaja berbeda bentuk — slot sebagai
+kartu terisi berjam di atas, geser tenggat sebagai pill garis bertanggal di bawah. Pengguna
+mengajukan satu pertanyaan; ia tidak seharusnya diminta memilih dulu bentuk jawabannya.
+
+Ditanyakan ke pemilik produk lebih dulu karena ini mengubah kontrak gestur §10.10, dan ia memilih
+opsi satu-sheet ini di antara tiga.
+
+**Membatalkannya:** kalau ternyata "geser tenggat" hampir tidak pernah dipakai, buang bagian
+bawahnya dan sheet kembali jadi murni pemilih slot.
+
+### U8. Mode bawa membawa `returnTo`
+
+§10.2 Jalur B memindahkan pengguna ke tab Kalender, dan tidak pernah menyebut ia kembali ke mana
+setelah Simpan. Pengguna berangkat dari backlog yang sedang disisir dan mendarat di layar lain —
+konteks kerjanya hilang, dan tidak ada jalan pulang selain menekan tab dan mencari barisnya lagi.
+
+Keputusan: mode bawa membawa rute **dan** posisi scroll layar asal; Simpan maupun Batal
+memulangkan, dan bilah _undo_ 5 detik muncul di layar asal itu. Berlaku juga untuk mode bawa yang
+berangkat dari peninjauan.
+
+### U9. Antrean peninjauan tidak boleh pecah
+
+DoD M7 menuntut "meninjau 5 agenda lewat selesai dalam <20 detik", tapi §10.7 menawarkan mode bawa
+sebagai salah satu aksi kartu — dan mode bawa pindah tab. Kartu ketiga melempar pengguna keluar,
+empat kartu sisanya hilang, dan DoD-nya tidak mungkin tercapai.
+
+Keputusan: di dalam antrean hanya ada aksi yang selesai di tempat. "Pilih di kalender" menandai
+item dan memindahkannya ke akhir antrean; mode bawa dibuka setelah antrean habis, dengan `returnTo`
+kembali ke antrean (U8).
+
+### U10. Durasi punya satu sumber kebenaran
+
+Durasi agenda diturunkan dari `allocatedPomodoros × focusMin` (§6.4), tapi §10.5 mengizinkan
+pengguna menarik pegangan bawah untuk mengubah panjang blok. Setelah itu ada dua angka yang
+mengklaim "berapa lama pekerjaan ini", dan brief tidak pernah menyebut mana yang menang.
+
+Keputusan: resize menempel ke kelipatan satu pomodoro + break dan **menulis balik**
+`allocatedPomodoros`, dengan label bayangan "3 → 4 pomodoro · 1j 55m". Durasi non-pomodoro ditolak
+secara desain — lebih baik daripada disimpan diam-diam sebagai angka kedua yang bertengkar dengan
+yang pertama.
+
+**Membatalkannya:** kalau ternyata sering dibutuhkan agenda yang panjangnya tidak kelipatan
+pomodoro, tambahkan `durationOverrideMin` di `Agenda` dan jadikan stepper turunan darinya — tapi
+satu arah saja, jangan dua.
+
+### U11. Kalender membuka ke Pekan; Hari Ini memiliki hari
+
+`TodayScreen.tsx` dan `CalendarScreen.tsx` merender `DayRibbon` dengan props yang hampir identik:
+dua dari empat tab menampilkan hal yang sama.
+
+Keputusan: Hari Ini adalah satu-satunya permukaan _hari ini_ dan pemilik pita hari; Kalender
+membuka ke Pekan dan menjawab "di mana ada ruang pekan ini". Mode Hari tetap ada sebagai tujuan
+`?tanggal=` — dicapai dari kolom pekan atau dari mode bawa.
+
+Empat tab §10.1 **tidak** berubah; yang berubah hanya isi masing-masing. Pemilik produk memilih
+opsi ini di antara tiga (termasuk opsi tiga tab yang akan menyimpang dari §10.1).
+
+Konsekuensi teknis: tanggal aktif pindah dari `useState` ke search param. Itu juga yang membuat
+deep link mode bawa (U8) mungkin, dan yang membuat tanggal bertahan saat pengguna mampir ke tab
+lain — dulu ia mereset.
+
+### U12. Task terlambat wajib muncul di Hari Ini
+
+`TodayScreen.tsx` menyaring `task.dueDate === todayKey`. Task yang tenggatnya kemarin dan belum
+punya slot tidak muncul di Hari Ini, tidak muncul di pita, dan hanya tenggelam di backlog — untuk
+pengguna yang harinya memang sering meleset (§1), itu kegagalan paling mahal yang bisa dipilih.
+
+Keputusan: `dueDate <= todayKey`, yang terlambat ditandai tenang ("Terlambat 4 hari", warna
+`ember`) dan diurutkan paling atas. Kalimatnya dirakit di `core` (`describeDueDate`), sejalan
+dengan T5.
+
+### U13. Tangkap cepat satu baris, detail bertahap
+
+§10.8 mendaftar sembilan hal di detail task. Untuk hari yang dinamis, menangkap "telepon balik Pak
+Budi" di tengah rapat tidak boleh berarti melewati sembilan kontrol.
+
+Keputusan: tangkap cepat = satu field judul, dengan default diam-diam (`P3`, 1 pomodoro, `inbox`);
+detail menampilkan hanya field yang terisi, plus satu baris "Tambah: …". Tetap chip dan default —
+§14 melarang input bahasa natural, dan itu tidak dilanggar.
+
+### U14. Poles M0 yang dikerjakan sekarang
+
+Dikerjakan di sesi yang sama, karena semuanya terlihat pada layar yang sudah ada:
+
+- **Pita hari menggulir sendiri dan mendarat di "sekarang".** 19 jam × 56px = lebih dari seribu
+  piksel yang menumpang scroll halaman; ponsel terbuka di jam 4 pagi.
+- **Jam kosong di luar jam tersedia terlipat** jadi pita bernama yang bisa diketuk. Yang dilipat
+  adalah _sisa_ setelah blok sholat dan agenda dikurangkan — versi pertama mendiskualifikasi
+  seluruh rentang yang bersentuhan dengan sholat, dan karena Subuh ada di dalam jam pra-fajar,
+  hasilnya tidak melipat apa pun sama sekali.
+- **Blok yang bertumpuk dibagi kolom.** Lantai 44px (§10.10) itu sendiri yang membuat blok pendek
+  menutupi tetangganya, jadi yang dikelompokkan adalah tumpang tindih **visual**, bukan temporal.
+- **Label sholat punya gutter sendiri** di dalam pita; agenda tidak pernah masuk ke situ.
+- **Alasan ditulis sebagai teks, bukan `title=`.** Tooltip tidak ada di layar sentuh, sementara
+  §10.5 mewajibkan area redup menyebut alasannya.
+- **Header wordmark dihapus**; wordmark pindah ke atas judul Hari Ini, indikator koneksi pindah ke
+  sisi kanan judul layar. Dua baris judul bertumpuk memakan ±100px di setiap layar.
+- **Splash jadi skeleton berbentuk pita hari.** Titik 2px berdenyut di layar kosong terbaca sebagai
+  halaman rusak, bukan halaman yang memuat.
+- **`HTTP 500 · FUNCTION_INVOCATION_FAILED` masuk ke `<details>`.** Nilai diagnostiknya nyata
+  (T18), jadi disembunyikan, bukan dihapus.
+- **Nilai mentah diterjemahkan**: `full`/`subtle`/`off`, nama metode sholat, dan date key
+  `2026-09-01`. Peta labelnya di `format/id.ts` beserta test yang mengunci kalimatnya (T5).
+- **Prioritas jadi batang warna**, bukan teks "P1" — dan slot kiri baris dikosongkan untuk checkbox
+  M1.
+- **Deret pomodoro jadi komponen**, bukan `'○'.repeat(n)`: lebarnya tidak lagi bergantung font, dan
+  deret panjang diringkas jadi "0/12".
+- **Lantai tipografi 12px**, dua token bernama menggantikan `text-[10px]`/`text-[11px]` yang
+  tersebar di sembilan tempat.
+- **Kartu "Berikutnya" dirender**, tanpa tombol "Mulai fokus" — layar fokus baru M4, dan tombol
+  yang tidak melakukan apa-apa lebih buruk daripada ketiadaan yang jujur (U1).
+
+### U15. Verifikasi render diperluas jadi 29 pemeriksaan
+
+A3 menetapkan render nyata sebagai cara memverifikasi UI. Sesi ini memperluasnya: 29 asersi di
+Chromium headless pada viewport 390×844, terang dan gelap, terhadap build produksi dengan payload
+`/api/bootstrap` tiruan — termasuk geometri (label sholat tidak tertimpa, blok tidak saling
+menimpa, teks terkecil ≥12px) yang tidak bisa dilihat dari membaca kode.
+
+Dua kali ia membuktikan dirinya di sesi ini: melipat jam kosong ternyata tidak berjalan sama
+sekali meski kodenya terbaca benar (lihat U14), dan satu asersi saya sendiri salah — ia menuntut
+`scrollTop > 0`, padahal setelah jam mati terlipat, "sekarang" memang sudah terlihat tanpa
+menggulir. Asersinya diganti dengan syarat yang sebenarnya: garis "sekarang" berada di dalam
+viewport pita.
+
+Script-nya sengaja **tidak** di-commit — ia bergantung pada payload tiruan yang akan basi begitu
+skema berubah. Yang di-commit adalah hasilnya.
+
 ---
 
 ## Yang sengaja **tidak** diputuskan sendiri
@@ -332,3 +468,5 @@ milestone-nya tiba:
   per hari atau merata per jam kerja tersedia.
 - **Nasib agenda saat task-nya diselesaikan lebih awal.** §5.1 mengunci arah sebaliknya
   (hapus agenda ≠ hapus task), tapi arah ini tidak disebut.
+- **Ambang melipat jam kosong.** Sekarang 45 menit (U14), dipilih karena di bawah itu pita lipatan
+  memakan lebih banyak ruang daripada yang dihematnya. Angkanya belum diuji pemakaian nyata.

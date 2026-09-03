@@ -438,15 +438,28 @@ Drag adalah percepatan bagi yang menyukainya, bukan syarat. Ini bukan selera —
 
 Ada dua jalur. Keduanya berakhir di tempat sama; yang pertama menutup mayoritas kasus.
 
-**Jalur A — Slot usulan (default, satu ketukan).**
-Dari mana pun sebuah task terlihat, aksi **Jadwalkan** membuka bottom sheet berisi **3–5 slot usulan**
-yang dihitung oleh `allocate()` untuk task tunggal itu. Tiap baris menampilkan waktu dan alasan
-singkat: "Besok 09:00–10:40 · dalam blok Kerja Dalam, 2 hari sebelum tenggat". Satu ketukan =
-agenda terbentuk + animasi konfirmasi. Di bawahnya ada pintasan cepat: **Nanti hari ini · Besok pagi ·
-Slot bebas berikutnya**, lalu **Pilih di kalender** sebagai pintu ke Jalur B.
+**Satu sheet untuk satu pertanyaan: "Kapan?"**
+Dulu ada dua pemilih waktu yang tampak kembar — "Jadwalkan" (§10.2) dan "Tunda" (§10.4) —
+menawarkan chip yang berbunyi sama ("Besok", "Akhir pekan") padahal hasilnya berbeda total: yang
+satu memesan waktu, yang lain hanya memindahkan tenggat. Keduanya sekarang satu bottom sheet
+berjudul **"Kapan?"**, dengan dua bagian yang sengaja **tidak** boleh terlihat serupa.
+
+**Jalur A — Beri slot (default, satu ketukan).**
+Bagian atas sheet: **3–5 slot usulan** yang dihitung untuk task tunggal itu. Tiap baris
+menampilkan **jam** dan alasan singkat: "Besok 09:00–10:40 · dalam blok Kerja Dalam, 2 hari
+sebelum tenggat". Satu ketukan = agenda terbentuk + animasi konfirmasi. Baris slot dirender
+sebagai **kartu terisi**.
 
 Ini yang membuat aplikasi terasa cepat. Sebagian besar waktu pengguna tidak ingin memilih piksel —
 ia ingin "besok pagi, urus saja detailnya".
+
+**Atau geser tenggat saja.**
+Bagian bawah sheet, di balik pemisah dan judulnya sendiri: chip **tanggal tanpa jam**
+(Besok · Akhir pekan · Pekan depan · Pilih tanggal). Chip ini **tidak pernah** membuat agenda —
+ia hanya memindahkan `dueDate`. Dirender sebagai **pill garis**, bukan kartu terisi, supaya
+bentuknya sendiri sudah membedakan "memesan waktu" dari "menggeser tenggat".
+
+Baris terakhir sheet: **Pilih di kalender**, pintu ke Jalur B.
 
 **Jalur B — Mode bawa (*carry*), untuk kontrol penuh.**
 Menekan "Pilih di kalender" memindahkan pengguna ke tab Kalender dengan task **terbawa**:
@@ -458,35 +471,76 @@ Menekan "Pilih di kalender" memindahkan pengguna ke tab Kalender dengan task **t
 - Ketuk sebuah slot → **blok bayangan** muncul di situ, sudah berukuran durasi task, dengan pegangan
   atas-bawah. Sekarang drag terjadi **di dalam satu layar** — dan itu justru nyaman di ponsel.
 - Ketuk area redup → sheet konfirmasi override yang menyebut pelanggarannya (D6), bukan penolakan.
-- Tombol **Simpan** mengunci agenda. Setelah tersimpan, bilah berubah jadi *undo* selama 5 detik.
+- Tombol **Simpan** mengunci agenda.
 
-Mode bawa juga dipakai untuk **menjadwal ulang**: dari kartu peninjauan (§10.6) atau dari swipe
-"Tunda", pengguna bisa langsung masuk ke mode bawa membawa agenda yang sudah ada.
+**Mode bawa wajib punya jalan pulang.** Ia membawa `returnTo`: rute **dan** posisi scroll layar
+asal. Setelah Simpan — dan juga setelah Batal — pengguna kembali ke tempat ia berangkat, bukan
+ditinggal di tab Kalender. Bilah berubah jadi *undo* selama 5 detik **di layar asal itu**, menyebut
+hasilnya ("Terjadwal Kamis 09:00 · Urungkan"). Tanpa aturan ini, menjadwalkan satu task memutus
+pekerjaan yang sedang berjalan: pengguna berangkat dari backlog yang sedang disisir dan mendarat
+di layar lain tanpa cara kembali ke barisnya.
+
+Mode bawa juga dipakai untuk **menjadwal ulang**: dari kartu peninjauan (§10.7) atau dari sheet
+"Kapan?", pengguna bisa langsung masuk ke mode bawa membawa agenda yang sudah ada — dengan
+`returnTo` yang sama.
 
 ### 10.3 Hari Ini
-- **Peninjauan** di paling atas jika ada agenda lewat yang belum dicek (§10.6)
+
+Hari Ini adalah **satu-satunya permukaan yang berbicara tentang hari ini**, dan pemilik tunggal
+pita hari. Tidak ada navigasi antar tanggal di sini — itu pekerjaan Kalender (§10.5).
+
+- **Peninjauan** di paling atas jika ada agenda lewat yang belum dicek (§10.7)
 - **Pita hari** (§11) — blok agenda hari ini, blok sholat, dan area di luar jam tersedia
 - **Berikutnya**: satu kartu besar untuk agenda terdekat, dengan tombol **Mulai fokus**
-- **Sisa hari ini**: task yang jatuh tempo hari ini tapi belum punya agenda
+- **Sisa hari ini**: task yang jatuh tempo **hari ini atau lebih awal** dan belum punya agenda.
+  Yang sudah terlambat **wajib** muncul di sini, ditandai tenang ("Terlambat 4 hari", warna
+  `ember`) dan diurutkan paling atas. Menyaring persis tanggal hari ini membuat task yang
+  tenggatnya meleset menghilang dari satu-satunya layar yang bertugas menangkapnya — kegagalan
+  paling mahal untuk hari yang memang sering meleset (§1). Nadanya tetap netral: menyebutkan,
+  bukan menghakimi.
 - Aksi pada blok agenda: ketuk = detail; tekan-tahan = angkat untuk dipindah di dalam pita hari
   (dengan auto-scroll di tepi, snap 5 menit, dan getaran halus saat menempel)
 
 ### 10.4 Tugas
+- **Tangkap cepat** di paling atas: satu field judul dan tombol simpan, tidak lebih. Default diam-diam:
+  `P3`, 1 pomodoro, tanpa kategori, status `inbox`. Menangkap "telepon balik Pak Budi" di tengah rapat
+  tidak boleh berarti melewati sembilan kontrol; sisanya diisi belakangan di detail, atau tidak
+  sama sekali. Ini tetap chip dan default — **bukan** input bahasa natural (§14).
 - Daftar backlog dengan filter cepat: kategori, prioritas, tag, jatuh tempo
-- **Ketuk** = buka detail (§10.7)
+- **Ketuk** = buka detail (§10.8)
 - **Swipe kanan** = tandai selesai (langsung, dengan undo 5 detik)
-- **Swipe kiri** = ungkap tiga aksi: **Jadwalkan** (§10.2 Jalur A) · **Tunda** · **Hapus**
-- **Tunda** membuka chip cepat: Nanti hari ini · Besok · Akhir pekan · Pekan depan · Pilih tanggal
+- **Swipe kiri** = ungkap dua aksi: **Kapan?** (§10.2) · **Hapus**. Dulu tiga, dengan "Jadwalkan"
+  dan "Tunda" berdiri terpisah; keduanya kini satu sheet, karena pengguna mengajukan satu
+  pertanyaan dan seharusnya tidak diminta memilih dulu bentuk jawabannya.
 - **Tekan-tahan** = masuk mode seleksi (checkbox), untuk perencanaan pekanan atau aksi massal
+- Prioritas dirender sebagai **batang warna di tepi baris**, bukan teks "P1": slot kiri baris milik
+  checkbox, dan sebuah kode yang harus diterjemahkan sendiri bukan informasi sekilas.
 - Drag untuk menyusun ulang urutan hanya aktif di dalam mode seleksi/urutkan, agar tidak bentrok
   dengan gestur swipe
 
 ### 10.5 Kalender
-- Mode **Hari** (pita vertikal) dan **Pekan** (kolom padat, ketuk kolom untuk masuk ke hari)
+
+Kalender adalah permukaan **perencanaan**, dan **dibuka ke mode Pekan**. Mode Hari tetap ada, tapi
+sebagai **tujuan** — dicapai dengan mengetuk kolom pekan, dari mode bawa, atau lewat deep link
+`?tanggal=YYYY-MM-DD` — bukan sebagai tampilan default. Sebelumnya Kalender membuka pita hari yang
+nyaris identik dengan Hari Ini, sehingga dua dari empat tab menampilkan hal yang sama; hari adalah
+pekerjaan Hari Ini (§10.3), dan Kalender menjawab pertanyaan yang hanya bisa ia jawab: **di mana
+ada ruang pekan ini**.
+
+- Tanggal aktif hidup di **URL**, bukan di state komponen: itu yang membuat mode bawa bisa
+  mengantar pengguna ke satu hari tertentu lalu memulangkannya (§10.2), dan yang membuat tanggal
+  bertahan saat pengguna mampir ke tab lain.
+- Mode **Pekan** (kolom padat, ketuk kolom untuk masuk ke hari) dan mode **Hari** (pita vertikal).
+  Mode Hari **wajib** punya tombol **"Hari ini"** di samping panah ‹ ›: tanpa itu, menjelajah enam
+  hari ke depan berarti enam ketukan untuk pulang.
 - Overlay yang selalu terbaca: availability window (di luar jam = redup), blok sholat, time block
   (warna sendiri), busy GCal (arsir netral)
 - **Tekan-tahan blok agenda** = angkat, pindahkan, lepas (snap 5 menit). **Pegangan bawah** = ubah
   durasi. Keduanya intra-layar, jadi aman di ponsel.
+- **Mengubah durasi menulis balik `allocatedPomodoros`.** Resize menempel ke kelipatan satu
+  pomodoro + break, dan label bayangan saat menarik berbunyi "3 → 4 pomodoro · 1j 55m". Panjang
+  blok dan stepper di detail task **selalu angka yang sama**; durasi non-pomodoro ditolak secara
+  desain, bukan disimpan diam-diam sebagai angka kedua yang bertengkar dengan yang pertama.
 - Setiap pelanggaran saat melepas → sheet konfirmasi yang menyebut pelanggarannya secara spesifik
 - Tombol **+** di kanan bawah membuka pemilih task → langsung masuk mode bawa (§10.2 Jalur B)
 - **Tidak ada baki task (task tray) di ponsel.** Fitur itu hanya muncul pada layout ≥768px.
@@ -501,8 +555,16 @@ Mode bawa juga dipakai untuk **menjadwal ulang**: dari kartu peninjauan (§10.6)
 ### 10.7 Peninjauan agenda lewat (D7)
 Muncul otomatis saat app dibuka bila ada `agenda.endAt < now && status === 'planned'`.
 Satu kartu per agenda, dapat diselesaikan dengan satu ketukan:
-**Selesai** · **Sebagian** (catat pomodoro terpakai) · **Tunda** (chip cepat, atau mode bawa untuk
-kontrol penuh) · **Lewati** (agenda dihapus, task kembali ke backlog).
+**Selesai** · **Sebagian** (catat pomodoro terpakai) · **Tunda** (chip cepat) ·
+**Lewati** (agenda dihapus, task kembali ke backlog).
+
+**Antrean tidak boleh pecah di tengah jalan.** Di dalam peninjauan hanya ada aksi yang selesai
+**di tempat**. "Pilih di kalender" tidak langsung membuka mode bawa — ia **menandai** item itu dan
+memindahkannya ke akhir antrean; mode bawa dibuka setelah antrean habis, satu per satu, masing-masing
+dengan `returnTo` kembali ke antrean (§10.2). Tanpa aturan ini, kartu ketiga melempar pengguna ke
+tab Kalender dan empat kartu sisanya hilang dari layar — dan DoD M7 ("meninjau 5 agenda lewat
+selesai dalam <20 detik dengan satu ibu jari") tidak mungkin tercapai.
+
 Kartu bisa juga **di-swipe kanan untuk Selesai** agar meninjau lima agenda terasa seperti satu gerakan.
 Tulisan harus netral dan tidak menghakimi. Judul: "Bagaimana kemarin berjalan?" — bukan
 "Anda melewatkan 4 agenda".
@@ -511,8 +573,27 @@ Tulisan harus netral dan tidak menghakimi. Judul: "Bagaimana kemarin berjalan?" 
 Judul, catatan, kategori, prioritas, tags, due date, alokasi pomodoro (stepper), sub-task
 (dapat dijadwalkan sendiri), dependency, daftar agenda terkait, riwayat pomodoro.
 
+**Bertahap, bukan sembilan field sekaligus.** Task lahir dari tangkap cepat (§10.4); detail
+**menampilkan hanya field yang sudah terisi**, plus satu baris "Tambah: kategori · tag ·
+dependency · sub-task" yang memunculkan sisanya sesuai kebutuhan. Sembilan kontrol terbuka
+serentak mengubah pencatatan lima detik menjadi formulir.
+
 ### 10.9 Setelan
 Jam tersedia per hari · buffer default · waktu sholat (lokasi, metode, durasi, aktif/nonaktif per waktu, opsi kirim ke GCal) · pomodoro (durasi, suara) · kategori & tag · time block · koneksi Google (kalender tujuan, kalender yang dibaca) · level perayaan · ekspor data (JSON).
+
+**Yang tergambar, diedit di tempatnya.** Mengubah durasi blok Ashar tidak boleh berarti Kalender →
+Setelan → gulir → sholat → Ashar → kembali ke Kalender untuk melihat hasilnya. Ketuk blok sholat di
+pita hari → sheet durasi & aktif untuk waktu itu (plus "hanya hari ini" → `PrayerOverride`).
+Tekan-tahan area redup → sheet jam tersedia untuk hari itu. Setiap editor ditulis **sekali** sebagai
+komponen sheet dan dipakai dari kedua tempat.
+
+Tab Setelan tetap ada sebagai **indeks lengkap**, dan sebagai satu-satunya rumah bagi hal yang tidak
+punya wujud visual di layar mana pun: zona waktu, koneksi Google, ekspor data, level perayaan.
+
+**Tidak ada nilai mentah di antarmuka.** `full`/`subtle`/`off`, nama metode perhitungan, dan date key
+`2026-09-01` adalah format penyimpanan; yang tampil selalu bentuk Indonesianya ("Penuh",
+"Kemenag RI", "Selasa, 1 September 2026"). Peta labelnya tinggal di `packages/core/src/format/id.ts`,
+tempat yang sama dengan pesan pelanggaran (§5.5) — bukan dirakit ulang di React.
 
 ### 10.10 Ringkasan gestur (kontrak — jangan menambah gestur di luar tabel ini)
 
@@ -520,7 +601,7 @@ Jam tersedia per hari · buffer default · waktu sholat (lokasi, metode, durasi,
 |---|---|---|---|
 | Ketuk | task / agenda | Buka detail | — |
 | Swipe kanan | baris task, kartu peninjauan | Tandai selesai (undo 5 dtk) | Checkbox di detail |
-| Swipe kiri | baris task | Ungkap Jadwalkan / Tunda / Hapus | Menu "..." di detail |
+| Swipe kiri | baris task | Ungkap Kapan? / Hapus | Menu "..." di detail |
 | Tekan-tahan | baris task | Mode seleksi | Tombol "Pilih" di header |
 | Tekan-tahan + drag | blok agenda (intra-layar) | Pindahkan slot | Ubah waktu di detail agenda |
 | Drag pegangan | blok agenda | Ubah durasi | Stepper durasi di detail agenda |
@@ -558,12 +639,30 @@ Satu pita vertikal kontinu mewakili satu hari. Yang membuatnya berbeda:
   disengaja dan dilindungi, bukan celah yang perlu diisi.
 - **Titik pomodoro berada di dalam blok agenda**, terisi secara real-time saat sesi berjalan.
 
+Tiga aturan tata letak yang membuat pita hari terpakai di ponsel, bukan sekadar tergambar:
+- **Pita menggulir sendiri dan mendarat di "sekarang".** Satu hari 04:00–23:00 pada 56px/jam lebih
+  dari seribu piksel; menumpang scroll halaman berarti ponsel terbuka di jam 4 pagi.
+- **Jam kosong di luar jam tersedia terlipat** menjadi satu pita bernama ("05:05–08:00 · di luar jam
+  tersedia") yang bisa diketuk untuk dibuka. Tidak ada yang disembunyikan — jamnya disebut — tapi
+  waktu mati berhenti memakan layar.
+- **Blok yang bertumpuk berbagi lebar.** Blok 15 menit tetap dirender minimal 44px agar bisa
+  disentuh (§10.10), dan justru lantai itu yang membuatnya menutupi tetangganya; yang dibagi kolom
+  adalah blok yang bertumpuk **secara visual**, bukan hanya yang bertumpuk secara waktu.
+- Sisi kiri di dalam pita adalah **gutter label sholat**; blok agenda tidak pernah masuk ke situ,
+  supaya nama waktu sholat tidak tertimpa agenda di jam yang sama.
+- Alasan ditulis sebagai **teks**, tidak pernah sebagai atribut `title`: tooltip tidak ada di layar
+  sentuh, sementara §10.5 mewajibkan area redup menyebutkan alasannya.
+
 **Gerak & perayaan** (hormati `prefers-reduced-motion`, dan setting `celebration`):
 - Task selesai → centang yang menggambar dirinya + getar halus (`navigator.vibrate(10)`)
 - Semua agenda hari ini tertinjau → pita "menutup" dengan animasi singkat + confetti
 - Commit rencana pekanan → confetti sekali
 - Cincin progres pekanan di header — tenang, tidak berdenyut
 Confetti hanya untuk tiga momen di atas. Kalau semuanya dirayakan, tidak ada yang terasa dirayakan.
+
+**Skala tipe.** 12px adalah **lantai** — tidak ada teks yang dibaca pengguna dirender lebih kecil,
+dan Martian Mono khususnya tidak terbaca di bawah itu. Dua langkah bernama, bukan angka lepasan:
+`--text-label` (12px) untuk metadata, `--text-meta` (13px) untuk baris sekunder.
 
 **Standar dasar tanpa perlu diumumkan:** target sentuh ≥44px, area aman iOS, fokus keyboard terlihat,
 kontras AA, mode gelap, dan seluruh alur utama dapat diselesaikan dengan satu ibu jari.
@@ -619,7 +718,11 @@ Kerjakan berurutan. Berhenti dan minta review di akhir tiap milestone.
   *DoD:* bisa login di URL produksi, data seed tampil, FOQUS terpasang sebagai PWA di ponsel, `pnpm test` hijau.
 - **M1 — Task.** CRUD task, kategori, tag, prioritas, due date, sub-task, dependency (dengan deteksi siklus), alokasi pomodoro, filter, swipe, layar Hari Ini.
   *DoD:* seluruh atribut task dapat dikelola dari ponsel tanpa keyboard eksternal.
-- **M2 — Agenda & kalender.** Availability window, buffer, blok sholat (adhan-js, default Bandung), tampilan hari & pekan, **slot usulan + mode bawa** (§10.2), pindah/ubah durasi blok agenda, hapus agenda (task tetap), dialog override yang spesifik.
+- **M2 — Agenda & kalender.** Availability window, buffer, blok sholat (adhan-js, default Bandung), tampilan hari & pekan, **sheet "Kapan?" + mode bawa** (§10.2), pindah/ubah durasi blok agenda (menulis balik `allocatedPomodoros`), hapus agenda (task tetap), dialog override yang spesifik.
+  Jalur A butuh mesin skoring, sementara `allocate()` penuh baru di M6: M2 membangun
+  `suggestSlots()` — varian **satu task** di atas fondasi yang sudah ada dan teruji
+  (`freeIntervals()`, `candidateSlots()`, `detectViolations()`, `reservedDurationMin()`), dan M6
+  menggeneralisasikannya jadi multi-task dengan urutan topologis dan split.
   *DoD:* invariant §5.1–§5.6 punya test dan lulus; **setiap alur penjadwalan dapat diselesaikan tanpa satu pun gerakan drag** (uji Playwright dengan klik saja).
 - **M3 — Google Calendar.** Buat kalender "FOQUS — Agenda", outbox di Postgres, jalur `waitUntil` + `/api/sync/drain` (dipanggil berulang oleh klien sampai antrean bersih), push create/update/delete, FreeBusy read + tampilan bentrok, indikator status sync & penanganan error.
   *DoD:* agenda muncul di Google Calendar dalam <10 detik; menghapus agenda menghapus event; mematikan koneksi di tengah proses lalu membuka app kembali → outbox terkuras sampai bersih.

@@ -46,9 +46,14 @@ export {
 } from './time/timezone.js';
 
 export {
+  CELEBRATION_LABELS,
   DAY_NAMES,
   MONTH_NAMES_LONG,
   MONTH_NAMES_SHORT,
+  PRAYER_METHOD_LABELS,
+  describeCelebration,
+  describeDueDate,
+  describePrayerMethod,
   formatDateLong,
   formatDateShort,
   formatDuration,
